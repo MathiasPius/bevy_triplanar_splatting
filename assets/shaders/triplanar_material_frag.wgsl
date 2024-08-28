@@ -189,7 +189,6 @@ fn fragment(
             trimap,
         );
         pbr_input.V = V;
-        pbr_input.diffuse_occlusion = occlusion;
 
         pbr_input.flags = mesh[in.instance_index].flags;
 
