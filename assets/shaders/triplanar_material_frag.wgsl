@@ -2,13 +2,15 @@
 #import bevy_pbr::pbr_types as pbr_types
 
 #import bevy_pbr::mesh_bindings::mesh
-#import bevy_pbr::mesh_view_bindings::{view, fog, screen_space_ambient_occlusion_texture}
+#import bevy_pbr::mesh_view_bindings::{view, fog}
 #import bevy_pbr::mesh_view_types::{FOG_MODE_OFF}
 #import bevy_core_pipeline::tonemapping::{screen_space_dither, tone_mapping}
 #import bevy_render::maths::powsafe;
 
 #ifdef SCREEN_SPACE_AMBIENT_OCCLUSION
+#import bevy_pbr::mesh_view_bindings::screen_space_ambient_occlusion_texture
 #import bevy_pbr::gtao_utils::gtao_multibounce
+#import bevy_pbr::lighting
 #endif
 
 #import bevy_pbr::mesh_functions as mesh_functions
@@ -17,13 +19,7 @@
 #import trimap::biplanar::{calculate_biplanar_mapping, biplanar_texture_splatted}
 #import trimap::triplanar::{calculate_triplanar_mapping, triplanar_normal_to_world_splatted}
 
-struct VertexOutput {
-    @builtin(position) clip_position: vec4<f32>,
-    @location(0) world_position: vec4<f32>,
-    @location(1) world_normal: vec3<f32>,
-    @location(2) material_weights: vec4<f32>,
-    @location(3) @interpolate(flat) instance_index: u32,
-};
+#import trimap::vertex::{VertexOutput};
 
 struct TriplanarMaterial {
     base_color: vec4<f32>,
@@ -148,9 +144,10 @@ fn fragment(
         pbr_input.material.perceptual_roughness = perceptual_roughness;
 
         // TODO: Split into diffuse/specular occlusion?
-        var occlusion: vec3<f32> = vec3(1.0);
+        var diffuse_occlusion: vec3<f32> = vec3(1.0);
+         var specular_occlusion: f32 = 1.0;
         if ((material.flags & pbr_types::STANDARD_MATERIAL_FLAGS_OCCLUSION_TEXTURE_BIT) != 0u) {
-            occlusion = vec3(biplanar_texture_splatted(
+            diffuse_occlusion = vec3(biplanar_texture_splatted(
                 occlusion_texture,
                 occlusion_sampler,
                 in.material_weights,
@@ -161,8 +158,13 @@ fn fragment(
         let ssao = textureLoad(screen_space_ambient_occlusion_texture, vec2<i32>(in.clip_position.xy), 0i).r;
         let ssao_multibounce = gtao_multibounce(ssao, pbr_input.material.base_color.rgb);
         occlusion = min(occlusion, ssao_multibounce);
+
+        let roughness = lighting::perceptualRoughnessToRoughness(perceptual_roughness);
+        specular_occlusion =  saturate(pow(NdotV + ssao, exp2(-16.0 * roughness - 1.0)) - 1.0 + ssao);
+
 #endif
-        pbr_input.diffuse_occlusion = occlusion;
+        pbr_input.diffuse_occlusion = diffuse_occlusion;
+        pbr_input.specular_occlusion = specular_occlusion;
 
         pbr_input.frag_coord = in.clip_position;
         pbr_input.world_position = in.world_position;
