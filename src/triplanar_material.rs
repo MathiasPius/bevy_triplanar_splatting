@@ -107,7 +107,11 @@ impl Material for TriplanarMaterial {
     }
 
     fn prepass_fragment_shader() -> ShaderRef {
-        "shaders/triplanar_material_prepass.wgsl".into()
+        "shaders/triplanar_material_prepass_frag.wgsl".into()
+    }
+
+    fn prepass_vertex_shader() -> ShaderRef {
+        "shaders/triplanar_material_prepass_vert.wgsl".into()
     }
 
     fn specialize(

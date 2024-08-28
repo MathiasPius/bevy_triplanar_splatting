@@ -1,5 +1,7 @@
 use bevy::{
     // pbr::wireframe::{WireframeConfig, WireframePlugin},
+    core_pipeline::experimental::taa::{TemporalAntiAliasBundle, TemporalAntiAliasPlugin},
+    pbr::ScreenSpaceAmbientOcclusionBundle,
     prelude::*,
     render::{
         renderer::RenderDevice,
@@ -17,6 +19,7 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .add_plugins(TriplanarMaterialPlugin)
         // .add_plugin(WireframePlugin::default())
+        .add_plugins(TemporalAntiAliasPlugin)
         .add_plugins(LookTransformPlugin)
         .add_plugins(FpsCameraPlugin::default())
         .add_systems(Startup, setup)
@@ -82,7 +85,9 @@ fn setup(
             Vec3::new(12.0, 12.0, 12.0),
             Vec3::new(0., 0., 0.),
             Vec3::Y,
-        ));
+        ))
+        .insert(ScreenSpaceAmbientOcclusionBundle::default())
+        .insert(TemporalAntiAliasBundle::default());
 }
 
 #[derive(Component)]

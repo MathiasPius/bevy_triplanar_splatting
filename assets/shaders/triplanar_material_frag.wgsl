@@ -157,8 +157,9 @@ fn fragment(
 #ifdef SCREEN_SPACE_AMBIENT_OCCLUSION
         let ssao = textureLoad(screen_space_ambient_occlusion_texture, vec2<i32>(in.clip_position.xy), 0i).r;
         let ssao_multibounce = gtao_multibounce(ssao, pbr_input.material.base_color.rgb);
-        occlusion = min(occlusion, ssao_multibounce);
+        diffuse_occlusion = min(diffuse_occlusion, ssao_multibounce);
 
+        let NdotV = max(dot(pbr_input.N, pbr_input.V), 0.0001);
         let roughness = lighting::perceptualRoughnessToRoughness(perceptual_roughness);
         specular_occlusion =  saturate(pow(NdotV + ssao, exp2(-16.0 * roughness - 1.0)) - 1.0 + ssao);
 
