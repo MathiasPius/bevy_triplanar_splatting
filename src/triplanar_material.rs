@@ -106,10 +106,6 @@ impl Material for TriplanarMaterial {
         "shaders/triplanar_material_frag.wgsl".into()
     }
 
-    fn prepass_vertex_shader() -> ShaderRef {
-        "shaders/triplanar_material_prepass.wgsl".into()
-    }
-
     fn prepass_fragment_shader() -> ShaderRef {
         "shaders/triplanar_material_prepass.wgsl".into()
     }
